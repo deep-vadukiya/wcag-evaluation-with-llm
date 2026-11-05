@@ -44,7 +44,8 @@ export const detect = async (code) => {
   await wait(300);
 
   browser ??= await chromium.launch();
-  const page = await browser.newPage();
+  const context = await browser.newContext();
+  const page = await context.newPage();
 
   const errors = [];
   page.on("pageerror", (err) => errors.push(err.message));
@@ -76,6 +77,6 @@ export const detect = async (code) => {
       violations: [],
     };
   } finally {
-    await page.close();
+    await context.close();
   }
 };
