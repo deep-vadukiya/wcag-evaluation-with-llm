@@ -11,10 +11,18 @@ const client = new OpenAI();
 const SYSTEM_PROMPT =
   "You fix accessibility issues in React components. Return only the full corrected component code, no explanation, no markdown fences.";
 
-export const repair = async (code, violations) => {
+const codeCleanUp = (text) =>
+  text
+    .replace(/^```[a-z]*\n?/i, "")
+    .replace(/\n?```\s*$/, "")
+    .trim();
+
+export const repair = async (code, violations, strategy = "zeroShot") => {
+  const prompt = buildPrompt(code, violations, strategy);
+
   const response = await client.chat.completions.create({
     model: process.env.OPENAI_MODEL,
-    temperature: 0,
+    temperature: 1,
     messages: [
       {
         role: "system",
@@ -25,7 +33,8 @@ export const repair = async (code, violations) => {
   });
 
   return {
-    fixedCode: response.choices[0].message.content.trim(),
+    fixedCode: codeCleanUp(response.choices[0].message.content ?? ""),
+    prompt,
     tokens: response.usage,
   };
 };
